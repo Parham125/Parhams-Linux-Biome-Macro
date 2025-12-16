@@ -27,7 +27,7 @@ WINDY • RAINY • SNOWY • SAND STORM • HELL • STARFALL • CORRUPTION �
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd "Parham's Linux Macro"
+cd "Parham's Linux Biome Macro"
 ```
 
 2. Install dependencies:
