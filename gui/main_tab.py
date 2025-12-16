@@ -1,0 +1,97 @@
+import customtkinter as ctk
+from biome_data import BIOMES
+from discord_webhook import send_biome_webhook,send_status_webhook
+import os
+class MainTab(ctk.CTkFrame):
+    def __init__(self,parent,config_manager,log_monitor,item_executor):
+        super().__init__(parent)
+        self.config_manager=config_manager
+        self.log_monitor=log_monitor
+        self.item_executor=item_executor
+        self.is_monitoring=False
+        main_frame=ctk.CTkFrame(self,fg_color="transparent")
+        main_frame.pack(expand=True)
+        self.biome_display_frame=ctk.CTkFrame(main_frame,width=500,height=200,corner_radius=20)
+        self.biome_display_frame.pack(pady=30)
+        self.biome_display_frame.pack_propagate(False)
+        self.biome_label=ctk.CTkLabel(self.biome_display_frame,text="🌳 NORMAL",font=("Arial",36,"bold"))
+        self.biome_label.pack(expand=True)
+        status_frame=ctk.CTkFrame(main_frame,fg_color="transparent")
+        status_frame.pack(pady=10)
+        ctk.CTkLabel(status_frame,text="Status:",font=("Arial",14)).pack(side="left",padx=5)
+        self.status_indicator=ctk.CTkLabel(status_frame,text="●",font=("Arial",20),text_color="red")
+        self.status_indicator.pack(side="left")
+        self.status_text=ctk.CTkLabel(status_frame,text="Stopped",font=("Arial",14))
+        self.status_text.pack(side="left",padx=5)
+        self.toggle_btn=ctk.CTkButton(main_frame,text="Start Monitoring",command=self.toggle_monitoring,width=200,height=40,font=("Arial",14,"bold"))
+        self.toggle_btn.pack(pady=20)
+        self.error_label=ctk.CTkLabel(main_frame,text="",text_color="red",font=("Arial",12))
+        self.error_label.pack(pady=5)
+        config=self.config_manager.load_config()
+        last_biome=config.get("last_biome","NORMAL")
+        if last_biome in BIOMES:
+            self.update_biome_display(last_biome)
+    def toggle_monitoring(self):
+        config=self.config_manager.load_config()
+        webhook_url=config.get("webhook_url","")
+        if not self.is_monitoring:
+            if self.log_monitor.start():
+                self.is_monitoring=True
+                self.item_executor.start()
+                self.status_indicator.configure(text_color="green")
+                self.status_text.configure(text="Running")
+                self.toggle_btn.configure(text="Stop Monitoring")
+                self.error_label.configure(text="")
+                if webhook_url:
+                    send_status_webhook(webhook_url,True)
+            else:
+                self.error_label.configure(text="Error: Log file not found!")
+        else:
+            self.log_monitor.stop()
+            self.item_executor.stop()
+            self.is_monitoring=False
+            self.status_indicator.configure(text_color="red")
+            self.status_text.configure(text="Stopped")
+            self.toggle_btn.configure(text="Start Monitoring")
+            if webhook_url:
+                send_status_webhook(webhook_url,False)
+    def on_biome_detected(self,biome_name):
+        self.after(0,lambda: self._handle_biome_change(biome_name))
+    def _handle_biome_change(self,biome_name):
+        config=self.config_manager.load_config()
+        if biome_name==config.get("last_biome"):
+            return
+        setting=config.get("biome_settings",{}).get(biome_name,"off")
+        if setting!="off":
+            webhook_url=config.get("webhook_url","")
+            ps_link=config.get("ps_link","")
+            send_everyone=(setting=="send_everyone")
+            success=send_biome_webhook(webhook_url,biome_name,ps_link,send_everyone)
+            if success:
+                config["last_biome"]=biome_name
+                self.config_manager.save_config(config)
+            else:
+                self.error_label.configure(text="Failed to send webhook!")
+                self.after(3000,lambda: self.error_label.configure(text=""))
+        else:
+            config["last_biome"]=biome_name
+            self.config_manager.save_config(config)
+        self.update_biome_display(biome_name)
+    def update_biome_display(self,biome_name):
+        if biome_name not in BIOMES:
+            return
+        biome_info=BIOMES[biome_name]
+        self.biome_label.configure(text=f"{biome_info['emoji']} {biome_name}")
+        color_hex=biome_info["color"]
+        try:
+            color_int=int(color_hex,16)
+            r=(color_int>>16)&0xFF
+            g=(color_int>>8)&0xFF
+            b=color_int&0xFF
+            dark_r=int(r*0.3)
+            dark_g=int(g*0.3)
+            dark_b=int(b*0.3)
+            bg_color=f"#{dark_r:02x}{dark_g:02x}{dark_b:02x}"
+            self.biome_display_frame.configure(fg_color=bg_color)
+        except:
+            pass

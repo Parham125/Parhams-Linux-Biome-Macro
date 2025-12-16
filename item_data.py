@@ -1,0 +1,1 @@
+PREDEFINED_ITEMS=[{"id":"biome_randomizer","name":"Biome Randomizer","default_interval":2100,"default_amount":"1"},{"id":"strange_controller","name":"Strange Controller","default_interval":1200,"default_amount":"1"}]
