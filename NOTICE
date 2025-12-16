@@ -1,0 +1,45 @@
+NOTICE
+
+Parham's Linux Biome Macro
+Copyright (C) 2025 Parham
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+ATTRIBUTION REQUIREMENTS:
+
+When distributing or modifying this software, you must:
+
+1. Retain this NOTICE file in all copies or substantial portions of the software
+2. Provide clear attribution to the original author(s):
+   - Parham (Main Developer)
+   - Manas (Helper) - Discord: https://discord.gg/oppression
+   - Maxstellar (Biome Icons Provider)
+
+3. Include a link to the original repository (if publicly available)
+4. Clearly indicate any modifications made to the original software
+5. Distribute any modified versions under the same GPL v3 license
+
+THIRD-PARTY COMPONENTS:
+
+This software uses the following third-party libraries:
+- CustomTkinter (MIT License)
+- Pillow (PIL License)
+- Requests (Apache 2.0 License)
+- pynput (LGPL v3 License)
+
+Biome thumbnails and icons are provided by Maxstellar and contributors.
+
+DISCLAIMER:
+
+This tool is for educational purposes. Use at your own risk. The developers
+are not responsible for any bans or issues that may arise from using automation
+tools in Roblox games. Always review the game's Terms of Service before using
+automation tools.
