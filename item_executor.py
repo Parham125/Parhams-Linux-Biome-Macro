@@ -101,8 +101,6 @@ class ItemExecutor:
             inv_coord=coordinates.get("inventory_button",{})
             self.mouse.position=(inv_coord.get("x",0),inv_coord.get("y",0))
             self.mouse.click(Button.left,1)
-            time.sleep(0.1)
-            self.mouse.click(Button.left,1)
             time.sleep(0.5)
             items_coord=coordinates.get("items_button",{})
             self.mouse.position=(items_coord.get("x",0),items_coord.get("y",0))
