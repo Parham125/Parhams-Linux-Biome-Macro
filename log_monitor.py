@@ -5,35 +5,58 @@ import os
 from biome_data import BIOMES
 class LogMonitor:
     def __init__(self,log_path,callback):
-        self.log_path=os.path.expanduser(log_path)
+        self.default_log_path=os.path.expanduser(log_path)
         self.callback=callback
         self.stop_flag=False
-        self.thread=None
+        self.threads=[]
         self.is_running=False
+        self.mode="single"
+        self.accounts=[]
+    def set_mode(self,mode,accounts=None):
+        self.mode=mode
+        self.accounts=accounts if accounts else []
     def start(self):
         if self.is_running:
             return False
-        if not os.path.exists(self.log_path):
-            return False
-        self.stop_flag=False
-        self.is_running=True
-        self.thread=threading.Thread(target=self._monitor_loop,daemon=True)
-        self.thread.start()
+        if self.mode=="single":
+            if not os.path.exists(self.default_log_path):
+                return False
+            self.stop_flag=False
+            self.is_running=True
+            thread=threading.Thread(target=self._monitor_loop,args=(self.default_log_path,None),daemon=True)
+            thread.start()
+            self.threads.append(thread)
+        else:
+            if not self.accounts:
+                return False
+            valid_accounts=[acc for acc in self.accounts if os.path.exists(os.path.expanduser(acc["log_path"]))]
+            if not valid_accounts:
+                return False
+            self.stop_flag=False
+            self.is_running=True
+            for account in valid_accounts:
+                log_path=os.path.expanduser(account["log_path"])
+                identifier=account["identifier"]
+                thread=threading.Thread(target=self._monitor_loop,args=(log_path,identifier),daemon=True)
+                thread.start()
+                self.threads.append(thread)
         return True
     def stop(self):
         if not self.is_running:
             return
         self.stop_flag=True
         self.is_running=False
-        if self.thread and self.thread.is_alive():
-            self.thread.join(timeout=2)
-    def _monitor_loop(self):
+        for thread in self.threads:
+            if thread.is_alive():
+                thread.join(timeout=2)
+        self.threads=[]
+    def _monitor_loop(self,log_path,account_identifier):
         try:
-            with open(self.log_path,"r") as f:
+            with open(log_path,"r") as f:
                 f.seek(0,2)
                 last_size=f.tell()
                 while not self.stop_flag:
-                    current_size=os.path.getsize(self.log_path)
+                    current_size=os.path.getsize(log_path)
                     if current_size<last_size:
                         f.seek(0,2)
                         last_size=current_size
@@ -51,7 +74,7 @@ class LogMonitor:
                                 if data.get("command")=="SetRichPresence":
                                     biome=data.get("data",{}).get("largeImage",{}).get("hoverText")
                                     if biome and biome in BIOMES:
-                                        self.callback(biome)
+                                        self.callback(biome,account_identifier)
                     except json.JSONDecodeError:
                         pass
                     except Exception:

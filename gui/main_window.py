@@ -50,13 +50,28 @@ class MainWindow(ctk.CTk):
         self.tabview.add("Item Use")
         self.main_tab=MainTab(self.tabview.tab("Main"),self.config_manager,self.log_monitor,self.item_executor)
         self.main_tab.pack(fill="both",expand=True)
-        self.settings_tab=SettingsTab(self.tabview.tab("Settings"),self.config_manager)
+        self.settings_tab=SettingsTab(self.tabview.tab("Settings"),self.config_manager,self._on_mode_change)
         self.settings_tab.pack(fill="both",expand=True)
         self.credits_tab=CreditsTab(self.tabview.tab("Credits"))
         self.credits_tab.pack(fill="both",expand=True)
         self.item_use_tab=ItemUseTab(self.tabview.tab("Item Use"),self.config_manager,self.item_executor)
         self.item_use_tab.pack(fill="both",expand=True)
+        self._update_tab_states()
         self.protocol("WM_DELETE_WINDOW",self._on_close)
+    def _on_mode_change(self,mode):
+        self._update_tab_states()
+    def _update_tab_states(self):
+        config=self.config_manager.load_config()
+        mode=config.get("mode","single")
+        if mode=="multi":
+            for widget in self.tabview.tab("Item Use").winfo_children():
+                widget.pack_forget()
+            ctk.CTkLabel(self.tabview.tab("Item Use"),text="Item Use is disabled in Multi mode",font=("Arial",16),text_color="gray").pack(expand=True)
+        else:
+            for widget in self.tabview.tab("Item Use").winfo_children():
+                widget.destroy()
+            self.item_use_tab=ItemUseTab(self.tabview.tab("Item Use"),self.config_manager,self.item_executor)
+            self.item_use_tab.pack(fill="both",expand=True)
     def _on_close(self):
         if self.log_monitor.is_running:
             webhook_url=self.config.get("webhook_url","")

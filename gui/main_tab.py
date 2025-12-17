@@ -34,7 +34,10 @@ class MainTab(ctk.CTkFrame):
     def toggle_monitoring(self):
         config=self.config_manager.load_config()
         webhook_url=config.get("webhook_url","")
+        mode=config.get("mode","single")
+        accounts=config.get("accounts",[])
         if not self.is_monitoring:
+            self.log_monitor.set_mode(mode,accounts)
             if self.log_monitor.start():
                 self.is_monitoring=True
                 self.item_executor.start()
@@ -45,7 +48,10 @@ class MainTab(ctk.CTkFrame):
                 if webhook_url:
                     send_status_webhook(webhook_url,True)
             else:
-                self.error_label.configure(text="Error: Log file not found!")
+                if mode=="single":
+                    self.error_label.configure(text="Error: Log file not found!")
+                else:
+                    self.error_label.configure(text="Error: No valid log files found!")
         else:
             self.log_monitor.stop()
             self.item_executor.stop()
@@ -55,33 +61,59 @@ class MainTab(ctk.CTkFrame):
             self.toggle_btn.configure(text="Start Monitoring")
             if webhook_url:
                 send_status_webhook(webhook_url,False)
-    def on_biome_detected(self,biome_name):
-        self.after(0,lambda: self._handle_biome_change(biome_name))
-    def _handle_biome_change(self,biome_name):
+    def on_biome_detected(self,biome_name,account_identifier=None):
+        self.after(0,lambda: self._handle_biome_change(biome_name,account_identifier))
+    def _handle_biome_change(self,biome_name,account_identifier=None):
         config=self.config_manager.load_config()
-        if biome_name==config.get("last_biome"):
-            return
+        mode=config.get("mode","single")
+        if mode=="single":
+            if biome_name==config.get("last_biome"):
+                return
+            ps_link=config.get("ps_link","")
+        else:
+            last_biome_key=f"last_biome_{account_identifier}" if account_identifier else "last_biome"
+            if biome_name==config.get(last_biome_key):
+                return
+            ps_link=""
+            for account in config.get("accounts",[]):
+                if account["identifier"]==account_identifier:
+                    ps_link=account["ps_link"]
+                    break
         setting=config.get("biome_settings",{}).get(biome_name,"off")
         if setting!="off":
             webhook_url=config.get("webhook_url","")
-            ps_link=config.get("ps_link","")
             send_everyone=(setting=="send_everyone")
-            success=send_biome_webhook(webhook_url,biome_name,ps_link,send_everyone)
+            success=send_biome_webhook(webhook_url,biome_name,ps_link,send_everyone,account_identifier)
             if success:
-                config["last_biome"]=biome_name
+                if mode=="single":
+                    config["last_biome"]=biome_name
+                else:
+                    last_biome_key=f"last_biome_{account_identifier}" if account_identifier else "last_biome"
+                    config[last_biome_key]=biome_name
                 self.config_manager.save_config(config)
             else:
                 self.error_label.configure(text="Failed to send webhook!")
                 self.after(3000,lambda: self.error_label.configure(text=""))
         else:
-            config["last_biome"]=biome_name
+            if mode=="single":
+                config["last_biome"]=biome_name
+            else:
+                last_biome_key=f"last_biome_{account_identifier}" if account_identifier else "last_biome"
+                config[last_biome_key]=biome_name
             self.config_manager.save_config(config)
-        self.update_biome_display(biome_name)
-    def update_biome_display(self,biome_name):
+        display_text=biome_name
+        if account_identifier:
+            display_text=f"[{account_identifier}] {biome_name}"
+        self.update_biome_display(display_text)
+    def update_biome_display(self,display_text):
+        biome_name=display_text
+        if "[" in display_text and "]" in display_text:
+            biome_name=display_text.split("]")[-1].strip()
         if biome_name not in BIOMES:
             return
         biome_info=BIOMES[biome_name]
-        self.biome_label.configure(text=f"{biome_info['emoji']} {biome_name}")
+        label_text=f"{biome_info['emoji']} {display_text}" if "[" not in display_text else f"{biome_info['emoji']} {display_text}"
+        self.biome_label.configure(text=label_text)
         color_hex=biome_info["color"]
         try:
             color_int=int(color_hex,16)
