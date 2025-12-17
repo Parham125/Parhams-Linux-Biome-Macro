@@ -85,23 +85,18 @@ class SettingsTab(ctk.CTkScrollableFrame):
             self.accounts.pop(selected_idx)
             self._update_accounts_display()
     def _get_selected_account_index(self):
-        for idx,child in enumerate(self.accounts_scrollable.winfo_children()):
-            if isinstance(child,ctk.CTkFrame):
-                for widget in child.winfo_children():
-                    if isinstance(widget,ctk.CTkRadioButton) and widget.get()==1:
-                        return idx
-        return None
+        return getattr(self,'_selected_account_idx',None)
     def _update_accounts_display(self):
         for widget in self.accounts_scrollable.winfo_children():
             widget.destroy()
         if not self.accounts:
             ctk.CTkLabel(self.accounts_scrollable,text="No accounts added yet",text_color="gray").pack(pady=20)
             return
-        var=ctk.StringVar(value="0")
+        self._selected_account_idx=None
         for idx,account in enumerate(self.accounts):
             frame=ctk.CTkFrame(self.accounts_scrollable)
             frame.pack(fill="x",pady=5,padx=5)
-            radio=ctk.CTkRadioButton(frame,text="",variable=var,value=str(idx),width=20)
+            radio=ctk.CTkRadioButton(frame,text="",value=idx,width=20,command=lambda i=idx: setattr(self,'_selected_account_idx',i))
             radio.pack(side="left",padx=5)
             info_text=f"{account['identifier']} | {account['log_path']}"
             ctk.CTkLabel(frame,text=info_text,font=("Arial",10),anchor="w").pack(side="left",padx=5,fill="x",expand=True)

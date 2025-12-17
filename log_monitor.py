@@ -19,23 +19,53 @@ class LogMonitor:
         if self.is_running:
             return False
         if self.mode=="single":
-            if not os.path.exists(self.default_log_path):
+            expanded_path=os.path.expanduser(self.default_log_path)
+            if os.path.exists(expanded_path):
+                resolved_path=os.path.realpath(expanded_path)
+            elif os.path.islink(expanded_path):
+                target=os.readlink(expanded_path)
+                target_filename=os.path.basename(target)
+                symlink_parent=os.path.dirname(expanded_path)
+                actual_path=os.path.join(symlink_parent,target_filename)
+                if os.path.exists(actual_path):
+                    resolved_path=actual_path
+                else:
+                    return False
+            else:
                 return False
             self.stop_flag=False
             self.is_running=True
-            thread=threading.Thread(target=self._monitor_loop,args=(self.default_log_path,None),daemon=True)
+            thread=threading.Thread(target=self._monitor_loop,args=(resolved_path,None),daemon=True)
             thread.start()
             self.threads.append(thread)
         else:
             if not self.accounts:
                 return False
-            valid_accounts=[acc for acc in self.accounts if os.path.exists(os.path.expanduser(acc["log_path"]))]
+            valid_accounts=[]
+            for acc in self.accounts:
+                expanded_path=os.path.expanduser(acc["log_path"])
+                if os.path.exists(expanded_path):
+                    resolved_path=os.path.realpath(expanded_path)
+                elif os.path.islink(expanded_path):
+                    target=os.readlink(expanded_path)
+                    target_filename=os.path.basename(target)
+                    symlink_parent=os.path.dirname(expanded_path)
+                    actual_path=os.path.join(symlink_parent,target_filename)
+                    if os.path.exists(actual_path):
+                        resolved_path=actual_path
+                    else:
+                        continue
+                else:
+                    continue
+                acc_copy=acc.copy()
+                acc_copy["log_path"]=resolved_path
+                valid_accounts.append(acc_copy)
             if not valid_accounts:
                 return False
             self.stop_flag=False
             self.is_running=True
             for account in valid_accounts:
-                log_path=os.path.expanduser(account["log_path"])
+                log_path=account["log_path"]
                 identifier=account["identifier"]
                 thread=threading.Thread(target=self._monitor_loop,args=(log_path,identifier),daemon=True)
                 thread.start()

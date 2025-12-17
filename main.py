@@ -15,4 +15,7 @@ def main():
     log_monitor.callback=app.main_tab.on_biome_detected
     app.mainloop()
 if __name__=="__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nExiting...")

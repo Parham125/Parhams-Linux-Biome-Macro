@@ -7,7 +7,7 @@ class AccountsDialog(ctk.CTkToplevel):
         self.existing_accounts=existing_accounts
         self.account_to_edit=account_to_edit
         self.title("Add Account" if not account_to_edit else "Edit Account")
-        self.geometry("500x300")
+        self.geometry("500x380")
         self.transient(parent)
         self.after(100,self.grab_set)
         ctk.CTkLabel(self,text="Account Identifier",font=("Arial",12,"bold")).pack(pady=(20,5),anchor="w",padx=20)

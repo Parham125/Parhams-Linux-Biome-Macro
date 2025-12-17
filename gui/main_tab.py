@@ -40,7 +40,8 @@ class MainTab(ctk.CTkFrame):
             self.log_monitor.set_mode(mode,accounts)
             if self.log_monitor.start():
                 self.is_monitoring=True
-                self.item_executor.start()
+                if mode=="single":
+                    self.item_executor.start()
                 self.status_indicator.configure(text_color="green")
                 self.status_text.configure(text="Running")
                 self.toggle_btn.configure(text="Stop Monitoring")
