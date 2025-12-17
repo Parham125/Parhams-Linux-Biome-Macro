@@ -9,6 +9,7 @@ pyinstaller --name="BiomeMacro" \
     --windowed \
     --add-data "assets:assets" \
     --add-data "biome_data.py:." \
+    --add-data "VERSION:." \
     --hidden-import="PIL._tkinter_finder" \
     --collect-all customtkinter \
     main.py
