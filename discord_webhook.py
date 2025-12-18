@@ -18,11 +18,28 @@ def send_biome_webhook(webhook_url,biome_name,ps_link,send_everyone,account_iden
     if not webhook_url or biome_name not in BIOMES:
         return False
     biome_info=BIOMES[biome_name]
-    title=f"[{account_identifier}] Biome Started: {biome_name}" if account_identifier else f"Biome Started: {biome_name}"
-    embed={"title": title,"description": f"Join the server below:\n{ps_link}" if ps_link else "Private Server Link not configured","color": int(biome_info["color"],16),"footer": {"text": "Parham's Linux Biome Macro"},"timestamp": datetime.utcnow().isoformat()}
+    title=f"Biome Started: {biome_name}"
+    if account_identifier:
+        description=f"Account: `{account_identifier}`\n\nJoin the server below:\n{ps_link}" if ps_link else f"Account: `{account_identifier}`\n\nPrivate Server Link not configured"
+    else:
+        description=f"Join the server below:\n{ps_link}" if ps_link else "Private Server Link not configured"
+    embed={"title": title,"description": description,"color": int(biome_info["color"],16),"footer": {"text": "Parham's Linux Biome Macro"},"timestamp": datetime.utcnow().isoformat()}
     if biome_info["thumbnail_url"]:
         embed["thumbnail"]={"url": biome_info["thumbnail_url"]}
     payload={"content": "@everyone" if send_everyone else "","embeds": [embed]}
+    try:
+        response=requests.post(webhook_url,json=payload,timeout=10)
+        return response.status_code in [200,204]
+    except:
+        return False
+def send_biome_ended_webhook(webhook_url,biome_name,account_identifier=None):
+    if not webhook_url or biome_name not in BIOMES:
+        return False
+    biome_info=BIOMES[biome_name]
+    title=f"Biome Ended: {biome_name}"
+    description=f"Account: `{account_identifier}`" if account_identifier else ""
+    embed={"title": title,"description": description,"color": int(biome_info["color"],16),"footer": {"text": "Parham's Linux Biome Macro"},"timestamp": datetime.utcnow().isoformat()}
+    payload={"embeds": [embed]}
     try:
         response=requests.post(webhook_url,json=payload,timeout=10)
         return response.status_code in [200,204]

@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from biome_data import BIOMES
-from discord_webhook import send_biome_webhook,send_status_webhook
+from discord_webhook import send_biome_webhook,send_status_webhook,send_biome_ended_webhook
 import os
 class MainTab(ctk.CTkFrame):
     def __init__(self,parent,config_manager,log_monitor,item_executor):
@@ -67,19 +67,26 @@ class MainTab(ctk.CTkFrame):
     def _handle_biome_change(self,biome_name,account_identifier=None):
         config=self.config_manager.load_config()
         mode=config.get("mode","single")
+        webhook_url=config.get("webhook_url","")
         if mode=="single":
-            if biome_name==config.get("last_biome"):
+            previous_biome=config.get("last_biome")
+            if biome_name==previous_biome:
                 return
             ps_link=config.get("ps_link","")
+            if previous_biome and previous_biome in BIOMES and webhook_url:
+                send_biome_ended_webhook(webhook_url,previous_biome,None)
         else:
             last_biome_key=f"last_biome_{account_identifier}" if account_identifier else "last_biome"
-            if biome_name==config.get(last_biome_key):
+            previous_biome=config.get(last_biome_key)
+            if biome_name==previous_biome:
                 return
             ps_link=""
             for account in config.get("accounts",[]):
                 if account["identifier"]==account_identifier:
                     ps_link=account["ps_link"]
                     break
+            if previous_biome and previous_biome in BIOMES and webhook_url:
+                send_biome_ended_webhook(webhook_url,previous_biome,account_identifier)
         setting=config.get("biome_settings",{}).get(biome_name,"off")
         if setting!="off":
             webhook_url=config.get("webhook_url","")
