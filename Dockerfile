@@ -21,4 +21,4 @@ COPY requirements.txt .
 RUN python3.13 -m pip install --no-cache-dir -r requirements.txt
 RUN python3.13 -m pip install --no-cache-dir pyinstaller
 COPY . .
-CMD ["bash", "-c", "python3.13 -m PyInstaller --name=BiomeMacro --onefile --windowed --add-data assets:assets --add-data biome_data.py:. --add-data VERSION:. --hidden-import=PIL._tkinter_finder --collect-all customtkinter main.py && chmod -R 777 dist/"]
+CMD ["bash", "-c", "python3.13 -m PyInstaller --name=BiomeMacro --onefile --windowed --add-data assets:assets --add-data biome_data.py:. --add-data VERSION:. --hidden-import=PIL._tkinter_finder --hidden-import=pynput.keyboard._xorg --hidden-import=pynput.mouse._xorg --collect-all customtkinter --collect-all pynput main.py && chmod -R 777 dist/"]
