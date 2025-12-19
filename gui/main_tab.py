@@ -3,11 +3,12 @@ from biome_data import BIOMES
 from discord_webhook import send_biome_webhook,send_status_webhook,send_biome_ended_webhook
 import os
 class MainTab(ctk.CTkFrame):
-    def __init__(self,parent,config_manager,log_monitor,item_executor):
+    def __init__(self,parent,config_manager,log_monitor,item_executor,afk_executor):
         super().__init__(parent)
         self.config_manager=config_manager
         self.log_monitor=log_monitor
         self.item_executor=item_executor
+        self.afk_executor=afk_executor
         self.is_monitoring=False
         main_frame=ctk.CTkFrame(self,fg_color="transparent")
         main_frame.pack(expand=True)
@@ -42,6 +43,7 @@ class MainTab(ctk.CTkFrame):
                 self.is_monitoring=True
                 if mode=="single":
                     self.item_executor.start()
+                    self.afk_executor.start()
                 self.status_indicator.configure(text_color="green")
                 self.status_text.configure(text="Running")
                 self.toggle_btn.configure(text="Stop Monitoring")
@@ -56,6 +58,7 @@ class MainTab(ctk.CTkFrame):
         else:
             self.log_monitor.stop()
             self.item_executor.stop()
+            self.afk_executor.stop()
             self.is_monitoring=False
             self.status_indicator.configure(text_color="red")
             self.status_text.configure(text="Stopped")

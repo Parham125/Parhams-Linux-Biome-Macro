@@ -9,13 +9,15 @@ from gui.main_tab import MainTab
 from gui.settings_tab import SettingsTab
 from gui.credits_tab import CreditsTab
 from gui.item_use_tab import ItemUseTab
+from gui.anti_afk_tab import AntiAfkTab
 from discord_webhook import send_status_webhook
 class MainWindow(ctk.CTk):
-    def __init__(self,config_manager,log_monitor,item_executor):
+    def __init__(self,config_manager,log_monitor,item_executor,afk_executor):
         super().__init__()
         self.config_manager=config_manager
         self.log_monitor=log_monitor
         self.item_executor=item_executor
+        self.afk_executor=afk_executor
         self.config=self.config_manager.load_config()
         self.title("Parham's Linux Biome Macro")
         geometry=self.config.get("window_geometry","550x600")
@@ -48,7 +50,8 @@ class MainWindow(ctk.CTk):
         self.tabview.add("Settings")
         self.tabview.add("Credits")
         self.tabview.add("Item Use")
-        self.main_tab=MainTab(self.tabview.tab("Main"),self.config_manager,self.log_monitor,self.item_executor)
+        self.tabview.add("Anti-AFK")
+        self.main_tab=MainTab(self.tabview.tab("Main"),self.config_manager,self.log_monitor,self.item_executor,self.afk_executor)
         self.main_tab.pack(fill="both",expand=True)
         self.settings_tab=SettingsTab(self.tabview.tab("Settings"),self.config_manager,self._on_mode_change)
         self.settings_tab.pack(fill="both",expand=True)
@@ -56,6 +59,8 @@ class MainWindow(ctk.CTk):
         self.credits_tab.pack(fill="both",expand=True)
         self.item_use_tab=ItemUseTab(self.tabview.tab("Item Use"),self.config_manager,self.item_executor)
         self.item_use_tab.pack(fill="both",expand=True)
+        self.anti_afk_tab=AntiAfkTab(self.tabview.tab("Anti-AFK"),self.config_manager,self.afk_executor)
+        self.anti_afk_tab.pack(fill="both",expand=True)
         self._update_tab_states()
         self.protocol("WM_DELETE_WINDOW",self._on_close)
     def _on_mode_change(self,mode):
@@ -67,11 +72,18 @@ class MainWindow(ctk.CTk):
             for widget in self.tabview.tab("Item Use").winfo_children():
                 widget.pack_forget()
             ctk.CTkLabel(self.tabview.tab("Item Use"),text="Item Use is disabled in Multi mode",font=("Arial",16),text_color="gray").pack(expand=True)
+            for widget in self.tabview.tab("Anti-AFK").winfo_children():
+                widget.pack_forget()
+            ctk.CTkLabel(self.tabview.tab("Anti-AFK"),text="Anti-AFK is disabled in Multi mode",font=("Arial",16),text_color="gray").pack(expand=True)
         else:
             for widget in self.tabview.tab("Item Use").winfo_children():
                 widget.destroy()
             self.item_use_tab=ItemUseTab(self.tabview.tab("Item Use"),self.config_manager,self.item_executor)
             self.item_use_tab.pack(fill="both",expand=True)
+            for widget in self.tabview.tab("Anti-AFK").winfo_children():
+                widget.destroy()
+            self.anti_afk_tab=AntiAfkTab(self.tabview.tab("Anti-AFK"),self.config_manager,self.afk_executor)
+            self.anti_afk_tab.pack(fill="both",expand=True)
     def _on_close(self):
         if self.log_monitor.is_running:
             webhook_url=self.config.get("webhook_url","")
@@ -81,4 +93,5 @@ class MainWindow(ctk.CTk):
         self.config_manager.save_config(self.config)
         self.log_monitor.stop()
         self.item_executor.stop()
+        self.afk_executor.stop()
         self.destroy()
