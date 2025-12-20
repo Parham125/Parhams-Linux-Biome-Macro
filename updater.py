@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import requests
 from pathlib import Path
+import tkinter as tk
 from tkinter import messagebox
 from utils import get_resource_path
 GITHUB_REPO="Parham125/Parhams-Linux-Biome-Macro"
@@ -65,6 +66,14 @@ rm "$0"
         if temp_path.exists():
             temp_path.unlink()
         raise Exception(f"Failed to download and replace binary: {str(e)}")
+def show_message(title,message,message_type="info"):
+    root=tk.Tk()
+    root.withdraw()
+    if message_type=="info":
+        messagebox.showinfo(title,message)
+    elif message_type=="error":
+        messagebox.showerror(title,message)
+    root.destroy()
 def check_and_update():
     try:
         if not getattr(sys,"frozen",False):
@@ -80,14 +89,14 @@ def check_and_update():
         download_and_replace_binary(download_url)
         return True
     except Exception as e:
-        messagebox.showerror("Update Failed",f"Failed to update the application:\n\n{str(e)}\n\nThe application will now close.")
+        show_message("Update Failed",f"Failed to update the application:\n\n{str(e)}\n\nThe application will now close.","error")
         sys.exit(1)
 def auto_update():
     try:
         updated=check_and_update()
         if updated:
-            messagebox.showinfo("Update Complete","The application has been updated. It will now restart.")
+            show_message("Update Complete","The application has been updated. It will now restart.","info")
             sys.exit(0)
     except Exception as e:
-        messagebox.showerror("Update Failed",f"Failed to update the application:\n\n{str(e)}\n\nThe application will now close.")
+        show_message("Update Failed",f"Failed to update the application:\n\n{str(e)}\n\nThe application will now close.","error")
         sys.exit(1)
