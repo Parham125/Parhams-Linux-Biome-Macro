@@ -1,16 +1,25 @@
 import customtkinter as ctk
 from PIL import Image
 import webbrowser
+import subprocess
 import os
 import sys
 sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import get_resource_path
+from utils import get_resource_path,get_version
 from gui.main_tab import MainTab
 from gui.settings_tab import SettingsTab
 from gui.credits_tab import CreditsTab
 from gui.item_use_tab import ItemUseTab
 from gui.anti_afk_tab import AntiAfkTab
 from discord_webhook import send_status_webhook
+def open_url(url):
+    try:
+        webbrowser.open(url)
+    except:
+        try:
+            subprocess.run(["xdg-open",url],check=False,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        except:
+            pass
 class MainWindow(ctk.CTk):
     def __init__(self,config_manager,log_monitor,item_executor,afk_executor):
         super().__init__()
@@ -19,7 +28,7 @@ class MainWindow(ctk.CTk):
         self.item_executor=item_executor
         self.afk_executor=afk_executor
         self.config=self.config_manager.load_config()
-        self.title("Parham's Linux Biome Macro")
+        self.title(f"Parham's Linux Biome Macro v{get_version()}")
         geometry=self.config.get("window_geometry","550x600")
         self.geometry(geometry)
         self.attributes("-topmost",True)
@@ -36,13 +45,13 @@ class MainWindow(ctk.CTk):
             github_img=Image.open(github_path)
             github_img=github_img.resize((24,24),Image.Resampling.LANCZOS)
             github_ctk_img=ctk.CTkImage(light_image=github_img,dark_image=github_img,size=(24,24))
-            github_btn=ctk.CTkButton(icon_container,image=github_ctk_img,text="",width=30,height=30,fg_color="transparent",hover_color="#1a1a1a",command=lambda: webbrowser.open("https://github.com/Parham125/Parhams-Linux-Biome-Macro"))
+            github_btn=ctk.CTkButton(icon_container,image=github_ctk_img,text="",width=30,height=30,fg_color="transparent",hover_color="#1a1a1a",command=lambda: open_url("https://github.com/Parham125/Parhams-Linux-Biome-Macro"))
             github_btn.pack(side="left",padx=2)
         if os.path.exists(discord_path):
             discord_img=Image.open(discord_path)
             discord_img=discord_img.resize((24,24),Image.Resampling.LANCZOS)
             discord_ctk_img=ctk.CTkImage(light_image=discord_img,dark_image=discord_img,size=(24,24))
-            discord_btn=ctk.CTkButton(icon_container,image=discord_ctk_img,text="",width=30,height=30,fg_color="transparent",hover_color="#1a1a1a",command=lambda: webbrowser.open("https://discord.gg/oppression"))
+            discord_btn=ctk.CTkButton(icon_container,image=discord_ctk_img,text="",width=30,height=30,fg_color="transparent",hover_color="#1a1a1a",command=lambda: open_url("https://discord.gg/oppression"))
             discord_btn.pack(side="left",padx=2)
         self.tabview=ctk.CTkTabview(self)
         self.tabview.pack(fill="both",expand=True,padx=10,pady=(5,10))

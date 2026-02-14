@@ -57,13 +57,13 @@ class AfkExecutor:
         except:
             pass
     def _press_space(self):
+        was_minimized=False
         try:
-            was_minimized=False
             if self.window:
                 try:
                     was_minimized=self.window.wm_state()=="iconic"
                     if not was_minimized:
-                        self.window.iconify()
+                        self.window.after(0,self.window.iconify)
                         time.sleep(0.2)
                 except:
                     pass
@@ -71,15 +71,10 @@ class AfkExecutor:
             self.keyboard.press(Key.space)
             self.keyboard.release(Key.space)
             time.sleep(0.1)
+        finally:
             if self.window and not was_minimized:
                 try:
-                    self.window.deiconify()
-                except:
-                    pass
-        except Exception as e:
-            if self.window and not was_minimized:
-                try:
-                    self.window.deiconify()
+                    self.window.after(0,self.window.deiconify)
                 except:
                     pass
     def get_next_press_time(self):

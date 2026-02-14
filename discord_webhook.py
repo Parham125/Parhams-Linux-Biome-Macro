@@ -1,13 +1,7 @@
 import requests
 from datetime import datetime
-from pathlib import Path
 from biome_data import BIOMES
-from utils import get_resource_path
-def get_version():
-    version_path=Path(get_resource_path("VERSION"))
-    if version_path.exists():
-        return version_path.read_text().strip()
-    return "Unknown"
+from utils import get_version
 def send_status_webhook(webhook_url,is_starting):
     if not webhook_url:
         return False
